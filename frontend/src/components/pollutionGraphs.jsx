@@ -13,7 +13,7 @@ export default function PollutantGraph({ data }) {
           <YAxis />
           <Tooltip />
           <Line type="monotone" dataKey="PM2_5" stroke="#ef4444" />
-          <Line type="monotone" dataKey="NO2" stroke="#3b82f6" />
+          <Line type="monotone" dataKey="CO2" stroke="#3b82f6" />
         </LineChart>
       </ResponsiveContainer>
     </div>

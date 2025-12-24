@@ -1,15 +1,15 @@
-export default function StatCard({ label, value, unit }) {
+export default function StatCard({ label, value, unit,type }) {
   if (value === undefined) return null;
 
   let status = "Good";
   let bg = "bg-green-600";
   let glow = "shadow-green-500/40";
 
-  if (value > 150) {
+  if ((type=="pm25" && value>35) || (type=="co2" && value>650)) {
     status = "Unhealthy";
     bg = "bg-red-600";
     glow = "shadow-red-500/40";
-  } else if (value > 75) {
+  } else if ((type=="pm25" && value>25) || (type=="co2" && value>500)) {
     status = "Moderate";
     bg = "bg-yellow-500";
     glow = "shadow-yellow-500/40";
