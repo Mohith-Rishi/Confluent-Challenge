@@ -1,64 +1,81 @@
-import os
 import time
 import json
 import random
-from dotenv import load_dotenv
+import math
 from confluent_kafka import Producer
+from dotenv import load_dotenv
+import os
 
-print("=== TEST: SCRIPT STARTING ===")
+# 1. Chargement des variables d'environnement (.env)
 load_dotenv()
 
-bootstrap_server = os.getenv('KAFKA_BOOTSTRAP_SERVER')
-api_key = os.getenv('KAFKA_API_KEY')
-api_secret = os.getenv('KAFKA_API_SECRET')
-
-if not all([bootstrap_server, api_key, api_secret]):
-    print(" ERROR: Missing environment variables in .env file")
-    exit()
-
-conf = {
-    'bootstrap.servers': bootstrap_server,
+config = {
+    'bootstrap.servers': os.getenv('KAFKA_BOOTSTRAP_SERVER'),
     'security.protocol': 'SASL_SSL',
     'sasl.mechanisms': 'PLAIN',
-    'sasl.username': api_key,
-    'sasl.password': api_secret,
-    'client.id': 'python-producer-pollution'
+    'sasl.username': os.getenv('KAFKA_API_KEY'),
+    'sasl.password': os.getenv('KAFKA_API_SECRET'),
 }
 
-producer = Producer(conf)
+producer = Producer(config)
+topic = "telemetry_brute" # Étape 1 du planning
 
 def delivery_report(err, msg):
     if err is not None:
-        print(f" Delivery failed: {err}")
+        print(f"❌ Message delivery failed: {err}")
     else:
-        print(f" Message delivered to {msg.topic()} [Partition: {msg.partition()}]")
+        print(f"✅ Message delivered to {msg.topic()} [{msg.partition()}]")
 
-def run_sensor():
-    print(f" Simulator started on server: {bootstrap_server}")
+# 2. Variable globale pour créer la courbe
+counter = 0 
+
+def run_sensor_simulator():
+    global counter
+    print(f"🚀 Simulator started. Sending pattern-based data to {topic}...")
+    
     try:
         while True:
-            data = {
-                "sensor_id": "sensor_01",
-                "co2": random.randint(350, 900),
-                "pm25": round(random.uniform(5.0, 45.0), 2),
+            # --- LOGIQUE MATHÉMATIQUE (PATTERN) ---
+            # On incrémente le compteur pour faire avancer la vague
+            counter += 0.1 
+            
+            # Simulation CO2 (Oscille entre 400 et 800 ppm)
+            co2_base = 600
+            co2_amplitude = 200
+            co2_wave = co2_amplitude * math.sin(counter)
+            co2_noise = random.uniform(-5, 5) # Petit bruit pour le réalisme
+            co2_final = round(co2_base + co2_wave + co2_noise, 2)
+            
+            # Simulation PM2.5 (Oscille entre 10 et 30)
+            pm25_base = 20
+            pm25_wave = 10 * math.cos(counter) # On utilise cos pour varier du CO2
+            pm25_final = round(pm25_base + pm25_wave + random.uniform(-2, 2), 2)
+            
+            # 3. Création du message JSON
+            payload = {
+                "sensor_id": "sensor_industrial_01",
+                "co2": co2_final,
+                "pm25": pm25_final,
                 "timestamp": int(time.time())
             }
-            
-            print(f" Attempting to send CO2: {data['co2']}...")
 
+            # 4. Envoi à Kafka
             producer.produce(
-                'telemetry_brute',
+                topic,
                 key="sensor_01",
-                value=json.dumps(data),
+                value=json.dumps(payload),
                 callback=delivery_report
             )
             
-            producer.poll(0)
-            producer.flush() 
+            print(f"📡 Sent: CO2={co2_final}ppm, PM2.5={pm25_final} | Pattern: {'📈 Rising' if co2_wave > 0 else '📉 Falling'}")
             
-            time.sleep(1) 
+            producer.poll(0)
+            time.sleep(1) # Envoi toutes les secondes pour un flux temps réel
+
     except KeyboardInterrupt:
-        print("Simulator stopped.")
+        print("Stopping simulator...")
+    finally:
+        producer.flush()
 
 if __name__ == "__main__":
-    run_sensor()
+    run_sensor_simulator()
