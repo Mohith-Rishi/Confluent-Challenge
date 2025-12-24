@@ -58,3 +58,21 @@ KAFKA_BOOTSTRAP_SERVER=your_server
 KAFKA_API_KEY=your_key
 
 KAFKA_API_SECRET=your_secret
+
+
+⚙️ using Docker
+Create .env file in your root directory. Take .env_sample as template and fill missing variables.
+Install docker on local environment.
+
+Run:
+docker-compose up
+
+Run if you made changes and want to see debug information:
+docker-compose up --build
+
+Run detached:
+docker-compose up --build -d
+
+Close:
+docker-compose down
+

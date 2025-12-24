@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile.producer
+    container_name: producer-py
+    env_file:
+      - .env
+    restart: unless-stopped
+    ports:
+      - "8080:8080"  # Expose if needed
+
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    container_name: consumer-py
+    env_file:
+      - .env
+    depends_on:
+      - producer
+    restart: unless-stopped
+
+  react-app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: react-frontend
+    ports:
+      - "3000:80"
+    env_file:
+      - .env
+    environment:
+      - VITE_BASE_PATH=/mockFrontend  # Sets the base path
+    depends_on:
+      - producer
+      - consumer
