@@ -1,12 +1,10 @@
-export default function Recommendations() {
+export default function Recommendations({ data }) {
+  if (!data) return <p className="p-4 opacity-50">Awaiting the HSE expert's analysis...</p>;
+
   return (
-    <div className="bg-gray-800 p-4 rounded">
-      <h2 className="text-xl mb-2">🧠 Recommendations</h2>
-      <ul className="list-disc ml-6 text-gray-300">
-        <li>Avoid outdoor activities during peak hours</li>
-        <li>Wear N95 masks if PM2.5 is high</li>
-        <li>Use air purifiers indoors</li>
-      </ul>
+    <div className="mt-6 p-4 bg-gray-800 rounded-lg border-l-4 border-blue-500">
+      <h3 className="text-blue-400 font-bold">🤖  Expert Tip </h3>
+      <p className="text-gray-200 italic mt-2">"{data.message}"</p>
     </div>
   );
 }

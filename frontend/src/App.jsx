@@ -1,24 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import StatCard from "./components/statCard";
 import PollutantGraph from "./components/pollutionGraphs";
 import Alerts from "./components/AlertsPanel";
 import Recommendations from "./components/RecommendationsTab";
 import 'react-toastify/dist/ReactToastify.css';
-import { ToastContainer } from 'react-toastify';
-import React from 'react'
-import { toast } from "react-toastify";
-import { useRef } from "react";
+import { ToastContainer, toast } from 'react-toastify';
 import ForecastRing from "./components/foreCastRing";
 import ForecastCard from "./components/foreCastCard";
 
-
-const EMPTY_POLLUTION = {
-  PM2_5: null,
-  CO2: null,
-};
+const EMPTY_POLLUTION = { PM2_5: null, CO2: null };
 
 export default function App() {
-
   const lastToastTimeCo2 = useRef(0);
   const lastToastTimePm25 = useRef(0);
   
@@ -27,136 +19,94 @@ export default function App() {
   const [showGraphs, setShowGraphs] = useState(false);
   const [forecastData, setForecastData] = useState(EMPTY_POLLUTION);
 
+  const [aiRecommendation, setAiRecommendation] = useState(null);
+
   useEffect(() => {
-    const live_ws_url =
-      import.meta.env.VITE_WS_TARGET || "ws://localhost:8000/ws";
+    const live_ws_url = import.meta.env.VITE_WS_TARGET || "ws://localhost:8000/ws";
+    const forecast_ws_url = import.meta.env.VITE_WS_FORECAST || "ws://localhost:8000/ws/forecast";
+    
+    const alert_ws_url = "ws://localhost:8000/ws/alerts";
 
-    const forecast_ws_url =
-      import.meta.env.VITE_WS_FORECAST || "ws://localhost:8000/ws/forecast";
-
-    // -------- Live Data WebSocket --------
     const liveWs = new WebSocket(live_ws_url);
+    const forecastWs = new WebSocket(forecast_ws_url);
+    
+    const alertWs = new WebSocket(alert_ws_url);
 
     liveWs.onmessage = (event) => {
       const parsed = JSON.parse(event.data);
-
       const formatted = {
         time: new Date(parsed.timestamp * 1000).toLocaleTimeString(),
         CO2: parsed.co2,
         PM2_5: parsed.pm25,
         sensorId: parsed.sensor_id,
       };
-
       setData((prev) => [...prev, formatted].slice(-150));
       setLatest(formatted);
 
       const now = Date.now();
-
       if (formatted.PM2_5 > 35 && now - lastToastTimePm25.current > 10000) {
-        toast.warn("⚠️ High PM2.5 detected", {
-          position: "top-right",
-          autoClose: 5000,
-        });
+        toast.warn("⚠️ High PM2.5 detected");
         lastToastTimePm25.current = now;
       }
-
       if (formatted.CO2 > 650 && now - lastToastTimeCo2.current > 10000) {
-        toast.error("🚨 High CO₂ level", {
-          position: "top-right",
-          autoClose: 5000,
-        });
+        toast.error("🚨 High CO₂ level");
         lastToastTimeCo2.current = now;
       }
     };
 
-    liveWs.onerror = (err) =>
-      console.error("Live WebSocket error", err);
-
-    // -------- Forecast Data WebSocket --------
-    const forecastWs = new WebSocket(forecast_ws_url);
-
     forecastWs.onmessage = (event) => {
       const parsed = JSON.parse(event.data);
-
-      const formattedForecast = {
-        time: new Date(parsed.timestamp * 1000).toLocaleTimeString(),
+      setForecastData({
         CO2: parsed.co2,
         PM2_5: parsed.pm25,
-        sensorId: parsed.sensor_id,
-      };
-
-      setForecastData(formattedForecast);
+      });
     };
 
-    forecastWs.onerror = (err) =>
-      console.error("Forecast WebSocket error", err);
+    alertWs.onmessage = (event) => {
+      const parsed = JSON.parse(event.data);
+      console.log("🤖 Expert Recommendation received:", parsed);
+      setAiRecommendation(parsed); 
+    };
 
-    // -------- Cleanup --------
     return () => {
       liveWs.close();
       forecastWs.close();
+      alertWs.close(); 
     };
   }, []);
 
-
-
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
-      <h1 className="text-3xl font-bold mb-6">
-        🌍 Real-Time Pollution Dashboard
-      </h1>
+      <h1 className="text-3xl font-bold mb-6">🌍 Real-Time Pollution Dashboard</h1>
 
-      {/* Cards */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatCard label="PM2.5" value={latest?.PM2_5} unit="µg/m³" type="pm25" />
         <StatCard label="CO2" value={latest?.CO2} unit="ppb" type="co2" />
       </div>
 
       <div className="border-gray-700 hover:shadow-lg rounded-lg p-4 border border-gray-700 mb-6" > 
-        <h2 className="text-sm font-semibold mb-4 opacity-80">
-          🔮 Forecast Severity (Next 5 Minutes)
-        </h2>
-
+        <h2 className="text-sm font-semibold mb-4 opacity-80">🔮 Forecast Severity (Next 5 Minutes)</h2>
         <div className="flex gap-8">
           <ForecastCard>
-            <ForecastRing
-            label="PM2.5"
-            now={latest?.PM2_5}
-            forecast={forecastData?.PM2_5}
-            unit="µg/m³"
-            type="pm25"
-          />
-        </ForecastCard>
-        
-        <ForecastCard>
-          <ForecastRing
-            label="CO₂"
-            now={latest?.CO2}
-            forecast={forecastData?.CO2}
-            unit="ppb"
-            type="co2"
-          />
-        </ForecastCard>
+            <ForecastRing label="PM2.5" now={latest?.PM2_5} forecast={forecastData?.PM2_5} unit="µg/m³" type="pm25" />
+          </ForecastCard>
+          <ForecastCard>
+            <ForecastRing label="CO₂" now={latest?.CO2} forecast={forecastData?.CO2} unit="ppb" type="co2" />
+          </ForecastCard>
         </div>
       </div>
 
-      
-
-
-
-      {/* Button */}
-      <button
-        className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 mb-6"
-        onClick={() => setShowGraphs(!showGraphs)}
-      >
+      <button className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 mb-6" onClick={() => setShowGraphs(!showGraphs)}>
         {showGraphs ? "Hide Graphs" : "Show Graphs"}
       </button>
 
-      {/* Graphs */}
       {showGraphs && <PollutantGraph data={data} />}
 
       <Alerts co2={latest.CO2} pm25={latest.PM2_5} />
-      <Recommendations />
+
+      {/* --- 5.--- */}
+      <Recommendations data={aiRecommendation} />
+      
       <ToastContainer />
     </div>
   );

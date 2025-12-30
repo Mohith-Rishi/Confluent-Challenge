@@ -1,39 +1,29 @@
-version: '3.8'
-
 services:
-  producer:
-    build:
-      context: .
-      dockerfile: Dockerfile.producer
-    container_name: producer-py
-    env_file:
-      - .env
-    restart: unless-stopped
+  # --- LE BACKEND (FastAPI) ---
+  backend:
+    build: ./backend
+    container_name: pollution_backend
     ports:
-      - "8080:8080"  # Expose if needed
+      - "8000:8000"
+    env_file: .env
+    volumes:
+      - ./backend:/app
+    # On lance uvicorn en pointant vers le dossier 'app' puis le fichier 'main'
+    command: python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  consumer:
-    build:
-      context: .
-      dockerfile: Dockerfile.consumer
-    container_name: consumer-py
-    env_file:
-      - .env
+  # --- LE FRONTEND (React / Vite) ---
+  frontend:
+    build: ./frontend
+    container_name: pollution_frontend
+    ports:
+      - "5173:5173"
     depends_on:
-      - producer
-    restart: unless-stopped
-
-  react-app:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: react-frontend
-    ports:
-      - "3000:80"
-    env_file:
-      - .env
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Important pour ne pas écraser les packages installés dans Docker
     environment:
-      - VITE_BASE_PATH=/mockFrontend  # Sets the base path
-    depends_on:
-      - producer
-      - consumer
+      # Cette variable permet à ton React de savoir où est l'API
+      - VITE_WS_TARGET=ws://localhost:8000/ws
+    # On force l'hôte 0.0.0.0 pour que le site soit visible sur ton Windows
+    command: npm run dev -- --host 0.0.0.0

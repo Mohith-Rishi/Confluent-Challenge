@@ -1,36 +1,37 @@
 import asyncio
-import time, random, json
 from confluent_kafka import Consumer
-from get_config import read_config
-from app.websocket_manager import broadcast_live, broadcast_forecast
+from .get_config import read_config 
+from .websocket_manager import broadcast_live, broadcast_forecast, broadcast_alerts
 
-# ---- Kafka configuration ----
+# Read the base configuration for Confluent Kafka
 base_config = read_config()
 
-live_config = base_config.copy()
-live_config["group.id"] = "live-consumer-group"
-# live_config.setdefault("auto.offset.reset", "latest")
+def init_c(gid, topic):
+    """
+    Initialize a Kafka consumer with a specific group ID and subscribe to a topic.
+    """
+    conf = base_config.copy()
+    conf["group.id"] = gid
+    # 'auto.offset.reset': 'latest' ensures we get the newest data immediately
+    conf["auto.offset.reset"] = "latest" 
+    c = Consumer(conf)
+    c.subscribe([topic])
+    return c
 
-forecast_config = base_config.copy()
-forecast_config["group.id"] = "forecast-consumer-group"
-# forecast_config.setdefault("auto.offset.reset", "latest")
-
-live_consumer = Consumer(live_config)
-forecast_consumer = Consumer(forecast_config)
-
-live_consumer.subscribe(["pollution"])
-forecast_consumer.subscribe(["pollution"])
+# Initialize consumers for different data streams
+live_consumer = init_c("live-group", "telemetry_brute")
+forecast_consumer = init_c("forecast-group", "predictions_ia")
+alert_consumer = init_c("alert-group", "alertes_pollution")
 
 async def kafka_loop():
     """
-    Poll Kafka continuously,
-    but send at most ONE message every 2 seconds.
+    Real-time loop for live telemetry data.
     """
-    latest_payload = None
-
     while True:
-        msg = live_consumer.poll(0.1)
+        # poll(0) check for messages without waiting, making it much faster
+        msg = await asyncio.to_thread(live_consumer.poll, 0)
         if msg and not msg.error():
+<<<<<<< HEAD
             latest_payload = msg.value().decode()
 
         if latest_payload:
@@ -40,27 +41,38 @@ async def kafka_loop():
         else:
             await asyncio.sleep(0.1)
 
+=======
+            # Immediate broadcast to all connected WebSocket clients
+            await broadcast_live(msg.value().decode('utf-8'))
+        # Tiny yield to the event loop to prevent CPU pinning while staying reactive
+        await asyncio.sleep(0.1)
+>>>>>>> 1188380 (Final Hackathon Submission: Integrated Gemini 2.0, Kafka Pipeline & Docker)
 
 async def forecast_loop():
     """
-    Poll Kafka continuously,
-    but send at most ONE message every 20 seconds.
+    Real-time loop for AI predictions.
     """
-    latest_payload = None
-
     while True:
-        msg = forecast_consumer.poll(0.1)
+        msg = await asyncio.to_thread(forecast_consumer.poll, 0)
         if msg and not msg.error():
-            latest_payload = msg.value().decode()
+            await broadcast_forecast(msg.value().decode('utf-8'))
+        await asyncio.sleep(0.1)
 
-        if latest_payload:
-            await broadcast_forecast(latest_payload)
-            latest_payload = None
-            await asyncio.sleep(20)
-        else:
-            await asyncio.sleep(0.1)
+async def alert_loop():
+    """
+    Real-time loop for pollution alerts.
+    """
+    while True:
+        msg = await asyncio.to_thread(alert_consumer.poll, 0)
+        if msg and not msg.error():
+            print(f"DEBUG: Alert received from Kafka -> {msg.value().decode()}")
+            await broadcast_alerts(msg.value().decode('utf-8'))
+        await asyncio.sleep(0.1)
 
-
-def close_consumer():
+def close_consumers():
+    """
+    Properly close all Kafka connections on shutdown.
+    """
     live_consumer.close()
     forecast_consumer.close()
+    alert_consumer.close()

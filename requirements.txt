@@ -1,4 +1,5 @@
 python-dotenv
 confluent-kafka
-ollama
 requests
+uvicorn[standard]
+websockets

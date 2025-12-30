@@ -1,36 +1,51 @@
-# Ignore the virtual environment
-.venv/
-__pycache__/
-*.env
-
-# Ignore sensitive credentials
+# --- SECURITY (Critical) ---
 .env
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# Ignore Google Cloud Service Account keys and sensitive JSON configs
+*.json
+!package.json
+!package-lock.json
+!composer.json
 
-# Ignore system files
-.DS_Store
+# --- VIRTUAL ENVIRONMENTS & CACHE ---
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
 
-#Front end part ignores
-# Logs
-logs
-*.log
+# --- FRONTEND DEPENDENCIES & BUILDS ---
+node_modules/
+dist/
+dist-ssr/
+*.local
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
+logs/
+*.log
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
+# --- SYSTEM FILES & EDITORS ---
+.vscode/
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+.DS_Store
+Thumbs.db
+
+# --- PROJECT SPECIFIC ---
+.get_config
+.websocket_manager
