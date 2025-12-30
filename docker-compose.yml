@@ -1,5 +1,4 @@
 services:
-  # --- LE BACKEND (FastAPI) ---
   backend:
     build: ./backend
     container_name: pollution_backend
@@ -8,10 +7,8 @@ services:
     env_file: .env
     volumes:
       - ./backend:/app
-    # On lance uvicorn en pointant vers le dossier 'app' puis le fichier 'main'
     command: python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  # --- LE FRONTEND (React / Vite) ---
   frontend:
     build: ./frontend
     container_name: pollution_frontend
@@ -23,7 +20,5 @@ services:
       - ./frontend:/app
       - /app/node_modules # Important pour ne pas écraser les packages installés dans Docker
     environment:
-      # Cette variable permet à ton React de savoir où est l'API
       - VITE_WS_TARGET=ws://localhost:8000/ws
-    # On force l'hôte 0.0.0.0 pour que le site soit visible sur ton Windows
     command: npm run dev -- --host 0.0.0.0
