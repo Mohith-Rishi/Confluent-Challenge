@@ -102,4 +102,68 @@ GCP_ENDPOINT_ID=your_vertex_ai_endpoint_id
 ### 3️⃣ Install Dependencies
 
 Install all required Python packages:
+```bash
+pip install -r requirements.txt
+```
 
+### 🚀 Execution Steps
+
+Run the full AI pipeline in the following order:
+
+1️⃣ Start IoT Data Streaming
+```bash
+python producer.py
+```
+
+2️⃣ (Optional) Collect Training Data
+```bash
+python training/collector.py
+```
+
+3️⃣ Start Predictive Inference
+```bash
+python ai_processor.py
+```
+
+4️⃣ Start Generative HSE Analysis
+```bash
+python consumer_ai.py
+```
+
+📊 Technical Details & Proof Points
+
+-Real-Time Processing
+
+   -Timestamped data ingestion
+
+   -Aggregation using Flink SQL TUMBLE windows
+
+-AI Deployment
+
+   -AutoML Tabular model deployed on Google Vertex AI
+
+   -Context-aware safety analysis powered by Gemini 2.0
+
+-Key Libraries Used
+
+   -confluent-kafka — High-performance Kafka client
+
+   -google-cloud-aiplatform — Vertex AI integration
+
+   -vertexai — Gemini 2.0 SDK
+
+   -pandas — Data processing
+
+   -python-dotenv — Secure environment variable management
+
+✅ Summary
+
+This AI Engine transforms raw industrial telemetry into:
+
+   -Predictive intelligence
+
+   -Actionable safety alerts
+
+   -Human-readable HSE recommendations
+
+All in real time, at industrial scale.
