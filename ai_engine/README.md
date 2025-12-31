@@ -86,78 +86,15 @@ Kafka Topic: predictions_ia
 
 ### 2️⃣ Environment Variables
 
-Create a `.env` file in this directory:
+Create a `.env` file in this directory with the following configuration:
 
-ENVIRONMENT CONFIGURATION
-
-Create a .env file with the following settings:
-
-Kafka Configuration
+```bash
+# Kafka Configuration
 KAFKA_BOOTSTRAP_SERVER=your_server.confluent.cloud:9092
 KAFKA_API_KEY=your_key
 KAFKA_API_SECRET=your_secret
 
-Google Cloud Configuration
+# Google Cloud Configuration
 GCP_PROJECT_ID=your_project_id
 GCP_REGION=us-central1
 GCP_ENDPOINT_ID=your_vertex_ai_endpoint_id
-
-INSTALL DEPENDENCIES
-
-Install all required Python packages:
-
-pip install -r requirements.txt
-
-EXECUTION STEPS
-
-Run the complete AI pipeline in the following order:
-
-Start IoT Data Streaming
-python producer.py
-
-(Optional) Collect Training Data
-python training/collector.py
-
-Start Predictive Inference
-python ai_processor.py
-
-Start Generative HSE Analysis
-python consumer_ai.py
-
-TECHNICAL DETAILS & PROOF POINTS
-
-Real-Time Processing
-
-Timestamped data ingestion
-
-Aggregation using Flink SQL TUMBLE windows
-
-AI Deployment
-
-AutoML Tabular model deployed on Google Vertex AI
-
-Context-aware safety analysis powered by Gemini 2.0
-
-Key Libraries Used
-
-confluent-kafka — High-performance Kafka client
-
-google-cloud-aiplatform — Vertex AI integration
-
-vertexai — Gemini 2.0 SDK
-
-pandas — Data processing
-
-python-dotenv — Secure environment variable management
-
-SUMMARY
-
-This AI Engine transforms raw industrial telemetry into:
-
-Predictive intelligence
-
-Actionable safety alerts
-
-Human-readable HSE recommendations
-
-All in real time, at industrial scale.
