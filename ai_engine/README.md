@@ -97,7 +97,7 @@ KAFKA_API_SECRET=your_secret
 # Google Cloud Configuration
 GCP_PROJECT_ID=your_project_id
 GCP_REGION=us-central1
-GCP_ENDPOINT_ID=your_vertex_ai_endpoint_id
+GCP_ENDPOINT_ID=your_vertex_ai_endpoint_id```
 
 3️⃣ Install Dependencies
 
