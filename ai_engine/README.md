@@ -130,7 +130,7 @@ python ai_processor.py
 python consumer_ai.py
 ```
 
-📊 Technical Details & Proof Points
+## 📊 Technical Details & Proof Points
 
 -Real-Time Processing
 
@@ -156,7 +156,7 @@ python consumer_ai.py
 
    -python-dotenv — Secure environment variable management
 
-✅ Summary
+## ✅ Summary
 
 This AI Engine transforms raw industrial telemetry into:
 
